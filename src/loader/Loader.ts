@@ -1,0 +1,136 @@
+interface Config {
+  waitBetweenLoader: number;
+  retries: number;
+  maxParallelLoad: number;
+}
+
+interface BlobRecord {
+  url?: string;
+  blob?: Blob;
+  loadingPromise?: Promise<BlobRecord | undefined>;
+  retried?: number;
+  resolve?: (blob: BlobRecord) => void;
+  failed?: boolean;
+}
+
+export class Loader {
+  #config: Config;
+  blobs: Record<string, BlobRecord> = {};
+  loadingQueue: string[] = [];
+  loadingCount: number = 0;
+
+  constructor(config: Partial<Config> = {}) {
+    this.#config = {
+      //  default
+      waitBetweenLoader: 10,
+      retries: 3,
+      maxParallelLoad: 3,
+      //  config
+      ...config,
+    };
+  }
+
+  getUrlSync(url: string): string | undefined {
+    return this.blobs[url]?.url;
+  }
+  
+  async getUrl(url: string): Promise<string> {
+    return this.#getRecord(url).then(record => record?.url ?? url);
+  }
+
+  async getBlob(url: string): Promise<Blob|undefined> {
+    return this.#getRecord(url).then(record => record.blob);
+  }
+
+  get progress(): number {
+    const blobs = Object.values(this.blobs);
+    return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0)
+  }
+
+  async #getRecord(url: string): Promise<BlobRecord> {
+    if (this.blobs[url]) {
+      return this.blobs[url];
+    }
+    const loadingPromise = new Promise<BlobRecord>((resolve) => {
+      this.blobs[url] = {
+        loadingPromise,
+        resolve,
+      };
+      this.loadingQueue.push(url);
+  
+      this.#processQueue();
+    });
+    return loadingPromise;
+  }
+
+  #processQueue() {
+    if (this.loadingCount < this.#config.maxParallelLoad) {
+      const url = this.loadingQueue.shift();
+      if (url) {
+        this.loadingCount++;
+        fetch(url)
+          .then(r => r.blob())
+          .then(blob => {
+            const split = url.split(".");
+            const ext = split[split.length - 1].toLowerCase();
+            switch (ext) {
+              case "mp3":
+              case "ogg":
+                if (blob.type.indexOf("audio/") !== 0) {
+                  return;
+                }
+                break;
+              case "png":
+              case "jpg":
+              case "jpeg":
+                if (blob.type.indexOf("image/") !== 0) {
+                  return;
+                }
+                break;
+              case "json":
+                if (blob.type.indexOf("application/json") !== 0) {
+                  return;
+                }
+                break;
+            }
+            return blob;
+          })
+          .then(blob => {
+            this.loadingCount--;
+            const record = this.blobs[url];
+            const resolve = record.resolve;
+            if (!blob) {
+              //  failed load
+              record.retried = (record.retried ?? 0) + 1;
+              if (record.retried < this.#config.retries) {
+                this.loadingQueue.push(url);
+              } else {
+                record.failed = true;
+                delete record.loadingPromise;
+                delete record.resolve;
+                delete record.retried;
+                resolve?.(record);
+              }
+            } else {
+              const u = URL.createObjectURL(blob);
+              delete record.loadingPromise;
+              delete record.resolve;
+              delete record.retried;
+              record.url = u;
+              record.blob = blob;
+              resolve?.(record);
+            }
+            setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);
+          });
+      }
+    }
+  }
+
+  revoke(url: string) {
+    const u = this.blobs[url]?.url;
+    if (u) {
+      URL.revokeObjectURL(u);
+      delete this.blobs[url];
+    }
+  }
+}
