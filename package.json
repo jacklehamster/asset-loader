@@ -1,0 +1,13 @@
+{
+  "name": "asset-loader",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.13.0",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
