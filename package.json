@@ -1,7 +1,12 @@
 {
-  "name": "asset-loader",
+  "name": "@dobuki/asset-loader",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },  
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^20.13.0",
