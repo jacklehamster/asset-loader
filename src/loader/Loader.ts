@@ -6,7 +6,6 @@ interface Config {
 
 interface BlobRecord {
   url?: string;
-  blob?: Blob;
   retried?: number;
   resolve?: (blob: BlobRecord) => void;
   failed?: boolean;
@@ -35,10 +34,6 @@ export class Loader {
   
   async getUrl(url: string): Promise<string> {
     return this.#getRecord(url).then(record => record?.url ?? url);
-  }
-
-  async getBlob(url: string): Promise<Blob|undefined> {
-    return this.#getRecord(url).then(record => record.blob);
   }
 
   async load(url: string): Promise<void> {
@@ -120,7 +115,6 @@ export class Loader {
               delete record.resolve;
               delete record.retried;
               record.url = u;
-              record.blob = blob;
               resolve?.(record);
             }
             setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);

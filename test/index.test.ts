@@ -32,6 +32,5 @@ describe("hello world", () => {
     
     const loader = new Loader()
     expect(await loader.getUrl("https://test-url.com")).toEqual("[blob-url]");
-    expect(await loader.getBlob("https://test-url.com")).not.toBeUndefined();
   });
 });

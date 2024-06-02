@@ -10,12 +10,8 @@ async function u(url: string): Promise<string> {
   return primaryLoader.getUrl(url);
 }
 
-async function blob(url: string): Promise<Blob | undefined> {
-  return primaryLoader.getBlob(url);
-}
-
 function revoke(url: string) {
   primaryLoader.revoke(url);
 }
 
-export { Loader, uSync, u, blob, revoke };
+export { Loader, uSync, u, revoke };
