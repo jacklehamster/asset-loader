@@ -45,6 +45,10 @@ export class Loader {
     await this.#getRecord(url);
   }
 
+  failed(url: string): boolean {
+    return !!this.blobs[url].failed;
+  }
+
   get progress(): number {
     const blobs = Object.values(this.blobs);
     return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0)
@@ -117,7 +121,6 @@ export class Loader {
               delete record.retried;
               record.url = u;
               record.blob = blob;
-              console.log(record);
               resolve?.(record);
             }
             setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);
