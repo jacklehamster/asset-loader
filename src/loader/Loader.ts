@@ -14,7 +14,7 @@ interface BlobRecord {
 export class Loader {
   #config: Config;
   blobs: Record<string, BlobRecord> = {};
-  loadingQueue: string[] = [];
+  loadingStack: string[] = [];
   loadingCount: number = 0;
 
   constructor(config: Partial<Config> = {}) {
@@ -57,7 +57,7 @@ export class Loader {
       this.blobs[url] = {
         resolve,
       };
-      this.loadingQueue.push(url);
+      this.loadingStack.push(url);
   
       this.#processQueue();
     });
@@ -65,7 +65,7 @@ export class Loader {
 
   #processQueue() {
     if (this.loadingCount < this.#config.maxParallelLoad) {
-      const url = this.loadingQueue.shift();
+      const url = this.loadingStack.pop();
       if (url) {
         this.loadingCount++;
         fetch(url)
@@ -103,7 +103,7 @@ export class Loader {
               //  failed load
               record.retried = (record.retried ?? 0) + 1;
               if (record.retried < this.#config.retries) {
-                this.loadingQueue.push(url);
+                this.loadingStack.push(url);
               } else {
                 record.failed = true;
                 delete record.resolve;
