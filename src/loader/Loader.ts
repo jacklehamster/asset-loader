@@ -7,7 +7,6 @@ interface Config {
 interface BlobRecord {
   url?: string;
   blob?: Blob;
-  loadingPromise?: Promise<BlobRecord | undefined>;
   retried?: number;
   resolve?: (blob: BlobRecord) => void;
   failed?: boolean;
@@ -42,6 +41,10 @@ export class Loader {
     return this.#getRecord(url).then(record => record.blob);
   }
 
+  async load(url: string): Promise<void> {
+    await this.#getRecord(url);
+  }
+
   get progress(): number {
     const blobs = Object.values(this.blobs);
     return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0)
@@ -51,16 +54,14 @@ export class Loader {
     if (this.blobs[url]) {
       return this.blobs[url];
     }
-    const loadingPromise = new Promise<BlobRecord>((resolve) => {
+    return new Promise<BlobRecord>((resolve) => {
       this.blobs[url] = {
-        loadingPromise,
         resolve,
       };
       this.loadingQueue.push(url);
   
       this.#processQueue();
     });
-    return loadingPromise;
   }
 
   #processQueue() {
@@ -106,18 +107,17 @@ export class Loader {
                 this.loadingQueue.push(url);
               } else {
                 record.failed = true;
-                delete record.loadingPromise;
                 delete record.resolve;
                 delete record.retried;
                 resolve?.(record);
               }
             } else {
               const u = URL.createObjectURL(blob);
-              delete record.loadingPromise;
               delete record.resolve;
               delete record.retried;
               record.url = u;
               record.blob = blob;
+              console.log(record);
               resolve?.(record);
             }
             setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);
