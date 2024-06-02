@@ -14,7 +14,7 @@ async function blob(url: string): Promise<Blob | undefined> {
   return primaryLoader.getBlob(url);
 }
 
-async function revoke(url: string) {
+function revoke(url: string) {
   primaryLoader.revoke(url);
 }
 
