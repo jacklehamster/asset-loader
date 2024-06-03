@@ -28368,7 +28368,7 @@ var import_react4 = __toESM(require_react(), 1);
 var import_react = __toESM(require_react(), 1);
 
 // src/UrlRegex.tsx
-var URL_REGEX = /https:\/\/api\.github\.com\/repos\/(?<author>[\w_-]+)\/(?<repo>[\w_-]+)/;
+var URL_REGEX = /https:\/\/api\.github\.com\/repos\/(?<author>[\w_.-]+)\/(?<repo>[\w_.-]+)/;
 
 // src/ZoomImage.tsx
 var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
