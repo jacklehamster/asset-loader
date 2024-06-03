@@ -1,11 +1,13 @@
 import React from "react";
+import { usePromise } from "./hooks/usePromise";
 
 export function ZoomImage({ fullPath, onClose, onPrevious, onNext }:{
-    fullPath: string;
+    fullPath: Promise<string|undefined>;
     onClose(): void;
     onPrevious?(): void;
     onNext?(): void;
   }) {
+    const { data } = usePromise<string|undefined>(fullPath);
     return <>
       <button onClick={onClose}>close</button>
       <button onClick={onPrevious} disabled={!onPrevious}>previous</button>
@@ -14,7 +16,7 @@ export function ZoomImage({ fullPath, onClose, onPrevious, onNext }:{
       <img style={{
           cursor: "pointer",
           width: "500px",
-        }} onClick={onClose} title={fullPath} src={fullPath} />
+        }} onClick={onClose} title={data} src={data} />
       </div>
     </>;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ImageList } from './ImageList';
 import { useGitTree } from './hooks/useGitTree';
 import { useLoader } from "./hooks/useLoader";
@@ -33,7 +33,7 @@ export default function App() {
       .map(([path, author, repo]) => `https://${author}.github.io/${repo}/${path}`);
   }, [tree, repo]);
 
-  const { u, loading } = useLoader({ urls: images });
+  const { u, loading, reset: resetLoader } = useLoader({ urls: images });
 
   const authorRef = useRef<HTMLInputElement>(null);
   const repoRef = useRef<HTMLInputElement>(null);
@@ -67,17 +67,18 @@ export default function App() {
     <input ref={repoRef} id={repoId} type="text" />
   </div>
   <div>
-    <button className={styles.black} type="button" onClick={() => {
+    <button className={styles.black} type="button" onClick={useCallback(() => {
       const author = authorRef.current?.value;
       const repo = repoRef.current?.value;
       if (author && repo) {
+        resetLoader();
         setRepo({
           name: repo,
           author: author,
         })
         setPath("");
       }
-    }}>explore</button>
+    }, [authorRef, repoRef, resetLoader])}>explore</button>
   </div>
   </>
     <div style={{ backgroundColor: "yellow", height: 20 }}>

@@ -1,3 +1,5 @@
+import { Priority } from "./Priority";
+
 interface Config {
   waitBetweenLoader: number;
   retries: number;
@@ -8,14 +10,19 @@ interface BlobRecord {
   url?: string;
   retried?: number;
   resolve?: (blob: BlobRecord) => void;
+  promise?: Promise<string|undefined>;
   failed?: boolean;
+  canceled?: boolean;
+  fetching?: boolean;
 }
 
 export class Loader {
   #config: Config;
-  blobs: Record<string, BlobRecord> = {};
+  readonly blobs: Record<string, BlobRecord> = {};
   loadingStack: string[] = [];
   loadingCount: number = 0;
+
+  static mainLoader = new Loader();
 
   constructor(config: Partial<Config> = {}) {
     this.#config = {
@@ -32,16 +39,28 @@ export class Loader {
     return this.blobs[url]?.url;
   }
   
-  async getUrl(url: string): Promise<string> {
-    return this.#getRecord(url).then(record => record?.url ?? url);
+  getUrl(url: string, priority: Priority = Priority.DEFAULT): Promise<string | undefined> {
+    const record = this.#getRecord(url, priority);
+    return record.promise ?? Promise.resolve(record.url);
   }
 
-  async load(url: string): Promise<void> {
-    await this.#getRecord(url);
+  load(url: string, priority: Priority =  Priority.DEFAULT): Promise<string | undefined> {
+    return this.getUrl(url, priority);
   }
 
   failed(url: string): boolean {
     return !!this.blobs[url].failed;
+  }
+
+  remove(url: string): void {
+    this.loadingStack = this.loadingStack.filter(u => url===u);
+    this.#revoke(url);
+    const b = this.blobs[url];
+    this.#resolveRecord(b);
+  }
+
+  clear() {
+    Object.keys(this.blobs).forEach(u => this.remove(u));
   }
 
   get progress(): number {
@@ -49,29 +68,53 @@ export class Loader {
     return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0)
   }
 
-  async #getRecord(url: string): Promise<BlobRecord> {
-    if (this.blobs[url]) {
-      //  bump priority
-      this.loadingStack = [
-        ...this.loadingStack.filter(u => u !== url),
-        url,
-      ];
-      return this.blobs[url];
+  #revoke(url: string) {
+    const b = this.blobs[url];
+    const u = b?.url;
+    if (u) {
+      URL.revokeObjectURL(u);
     }
-    return new Promise<BlobRecord>((resolve) => {
-      this.blobs[url] = {
-        resolve,
-      };
-      this.loadingStack.push(url);
-  
-      this.#processQueue();
-    });
+    delete b.url;
   }
 
-  #processQueue() {
-    if (this.loadingCount < this.#config.maxParallelLoad) {
+  #getRecord(url: string, priority: Priority): BlobRecord {
+    if (this.blobs[url]) {
+      if (this.loadingStack.indexOf(url) >= 0) {
+        //  bump priority
+        this.loadingStack = [
+          ...this.loadingStack.filter(u => u !== url),
+          url,
+        ];
+        if (priority === Priority.HIGH) {
+          this.#processQueue(true);
+        }
+      }
+      return this.blobs[url];
+    }
+    this.blobs[url] = {};
+    const promise  = new Promise<BlobRecord>((resolve) => {
+      this.blobs[url].resolve = resolve;
+      this.loadingStack.push(url);
+      this.#processQueue(priority === Priority.HIGH);
+    });
+    this.blobs[url].promise = promise.then(b => b.url);
+    return this.blobs[url];
+  }
+
+  #resolveRecord(b: BlobRecord) {
+    const resolve = b.resolve;
+    delete b.resolve;
+    delete b.retried;
+    delete b.fetching;
+    resolve?.(b);
+  }
+
+  #processQueue(highPriority: boolean) {
+    if (this.loadingCount < this.#config.maxParallelLoad || highPriority) {
       const url = this.loadingStack.pop();
-      if (url) {
+      const b = url ? this.blobs[url] : undefined;
+      if (url && b && !b.fetching && !b.url) {
+        b.fetching = true;
         this.loadingCount++;
         fetch(url)
           .then(r => r.blob())
@@ -104,37 +147,25 @@ export class Loader {
           })
           .then(blob => {
             this.loadingCount--;
-            const record = this.blobs[url];
-            const resolve = record.resolve;
             if (!blob) {
               //  failed load
-              record.retried = (record.retried ?? 0) + 1;
-              if (record.retried < this.#config.retries) {
+              b.retried = (b.retried ?? 0) + 1;
+              if (b.retried < this.#config.retries) {
                 this.loadingStack.push(url);
               } else {
-                record.failed = true;
-                delete record.resolve;
-                delete record.retried;
-                resolve?.(record);
+                b.failed = true;
+                this.#resolveRecord(b);
               }
             } else {
-              const u = URL.createObjectURL(blob);
-              delete record.resolve;
-              delete record.retried;
-              record.url = u;
-              resolve?.(record);
+              b.url = URL.createObjectURL(blob);
+              this.#resolveRecord(b);
             }
-            setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);
+            delete b.fetching;
+          })
+          .then(() => {
+            setTimeout(() => this.#processQueue(false), this.#config.waitBetweenLoader);
           });
       }
-    }
-  }
-
-  revoke(url: string) {
-    const u = this.blobs[url]?.url;
-    if (u) {
-      URL.revokeObjectURL(u);
-      delete this.blobs[url];
     }
   }
 }

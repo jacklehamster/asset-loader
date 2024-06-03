@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["*.tsx", "*.module.css", "*.ts"]
+  "include": ["*.tsx", "*.module.css", "*.ts", "*.d.ts"]
 }
