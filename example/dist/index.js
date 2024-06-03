@@ -28488,124 +28488,91 @@ var REPO_API = "https://api.github.com/repos/";
 // src/hooks/useLoader.tsx
 var import_react3 = __toESM(require_react(), 1);
 
-// /Users/vincent/asset-loader/src/loader/Loader.ts
-class Loader {
-  #config;
+// /Users/vincent/asset-loader/example/node_modules/@dobuki/asset-loader/dist/index.js
+class j {
+  #h;
   blobs = {};
   loadingStack = [];
   loadingCount = 0;
-  constructor(config = {}) {
-    this.#config = {
-      waitBetweenLoader: 10,
-      retries: 3,
-      maxParallelLoad: 3,
-      ...config
-    };
+  constructor(h = {}) {
+    this.#h = { waitBetweenLoader: 10, retries: 3, maxParallelLoad: 3, ...h };
   }
-  getUrlSync(url) {
-    return this.blobs[url]?.url;
+  getUrlSync(h) {
+    return this.blobs[h]?.url;
   }
-  async getUrl(url) {
-    return this.#getRecord(url).then((record) => record?.url ?? url);
+  async getUrl(h) {
+    return this.#t(h).then((t) => t?.url ?? h);
   }
-  async load(url) {
-    await this.#getRecord(url);
+  async load(h) {
+    await this.#t(h);
   }
-  failed(url) {
-    return !!this.blobs[url].failed;
+  failed(h) {
+    return !!this.blobs[h].failed;
   }
   get progress() {
-    const blobs = Object.values(this.blobs);
-    return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0);
+    const h = Object.values(this.blobs);
+    return !h.length ? 0 : h.reduce((t, P) => t + (P.url ? 1 : 0), 0);
   }
-  async#getRecord(url) {
-    if (this.blobs[url]) {
-      this.loadingStack = [
-        ...this.loadingStack.filter((u) => u !== url),
-        url
-      ];
-      return this.blobs[url];
-    }
-    return new Promise((resolve) => {
-      this.blobs[url] = {
-        resolve
-      };
-      this.loadingStack.push(url);
-      this.#processQueue();
+  async#t(h) {
+    if (this.blobs[h])
+      return this.loadingStack = [...this.loadingStack.filter((t) => t !== h), h], this.blobs[h];
+    return new Promise((t) => {
+      this.blobs[h] = { resolve: t }, this.loadingStack.push(h), this.#P();
     });
   }
-  #processQueue() {
-    if (this.loadingCount < this.#config.maxParallelLoad) {
-      const url = this.loadingStack.pop();
-      if (url) {
-        this.loadingCount++;
-        fetch(url).then((r) => r.blob()).then((blob) => {
-          const split = url.split(".");
-          const ext = split[split.length - 1].toLowerCase();
-          switch (ext) {
+  #P() {
+    if (this.loadingCount < this.#h.maxParallelLoad) {
+      const h = this.loadingStack.pop();
+      if (h)
+        this.loadingCount++, fetch(h).then((t) => t.blob()).then((t) => {
+          const P = h.split(".");
+          switch (P[P.length - 1].toLowerCase()) {
             case "mp3":
             case "ogg":
-              if (blob.type.indexOf("audio/") !== 0) {
+              if (t.type.indexOf("audio/") !== 0)
                 return;
-              }
               break;
             case "svg":
             case "gif":
             case "png":
             case "jpg":
             case "jpeg":
-              if (blob.type.indexOf("image/") !== 0) {
+              if (t.type.indexOf("image/") !== 0)
                 return;
-              }
               break;
             case "json":
-              if (blob.type.indexOf("application/json") !== 0) {
+              if (t.type.indexOf("application/json") !== 0)
                 return;
-              }
               break;
           }
-          return blob;
-        }).then((blob) => {
+          return t;
+        }).then((t) => {
           this.loadingCount--;
-          const record = this.blobs[url];
-          const resolve = record.resolve;
-          if (!blob) {
-            record.retried = (record.retried ?? 0) + 1;
-            if (record.retried < this.#config.retries) {
-              this.loadingStack.push(url);
-            } else {
-              record.failed = true;
-              delete record.resolve;
-              delete record.retried;
-              resolve?.(record);
-            }
-          } else {
-            const u = URL.createObjectURL(blob);
-            delete record.resolve;
-            delete record.retried;
-            record.url = u;
-            resolve?.(record);
+          const P = this.blobs[h], U = P.resolve;
+          if (!t)
+            if (P.retried = (P.retried ?? 0) + 1, P.retried < this.#h.retries)
+              this.loadingStack.push(h);
+            else
+              P.failed = true, delete P.resolve, delete P.retried, U?.(P);
+          else {
+            const q = URL.createObjectURL(t);
+            delete P.resolve, delete P.retried, P.url = q, U?.(P);
           }
-          setTimeout(() => this.#processQueue(), this.#config.waitBetweenLoader);
+          setTimeout(() => this.#P(), this.#h.waitBetweenLoader);
         });
-      }
     }
   }
-  revoke(url) {
-    const u = this.blobs[url]?.url;
-    if (u) {
-      URL.revokeObjectURL(u);
-      delete this.blobs[url];
-    }
+  revoke(h) {
+    const t = this.blobs[h]?.url;
+    if (t)
+      URL.revokeObjectURL(t), delete this.blobs[h];
   }
 }
-
-// /Users/vincent/asset-loader/example/node_modules/@dobuki/asset-loader/src/index.ts
-var primaryLoader = new Loader;
+var k = new j;
 
 // src/hooks/useLoader.tsx
 function useLoader({ urls }) {
-  const loader = import_react3.useMemo(() => new Loader, []);
+  const loader = import_react3.useMemo(() => new j, []);
   const [map, setMap] = import_react3.useState({});
   const [loading, setLoading] = import_react3.useState(0);
   import_react3.useEffect(() => {
@@ -28650,26 +28617,8 @@ function Links({ tree, path, setPath }) {
   }, undefined, false, undefined, this);
 }
 
-// __style_helper__
-function injectStyle(text) {
-  if (typeof document !== "undefined") {
-    const styleTag = document.getElementById("bun_lightningcss");
-    if (styleTag) {
-      const node2 = document.createTextNode(text);
-      styleTag.appendChild(node2);
-      return;
-    }
-    var style = document.createElement("style");
-    style.id = "bun_lightningcss";
-    var node = document.createTextNode(text);
-    style.appendChild(node);
-    document.head.appendChild(style);
-  }
-}
-
 // src/App.module.css
-injectStyle("._3ZGRyq_black{color:#fff;text-align:center;background-color:#282c34}");
-var App_module_default = { black: "_3ZGRyq_black" };
+var App_module_default = "./App.module-1ba60838f44f4b47.css";
 
 // src/App.tsx
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
