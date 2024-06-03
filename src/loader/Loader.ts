@@ -79,7 +79,7 @@ export class Loader {
     if (record.fetching) {
       delete record.fetching;
       this.loadingCount--;
-      setTimeout(() => this.#processQueue(false), this.#config.waitBetweenLoader);
+      setTimeout(() => this.#processQueue(Priority.DEFAULT), this.#config.waitBetweenLoader);
     }
   }
 
@@ -100,9 +100,7 @@ export class Loader {
           ...this.loadingStack.filter(u => u !== url),
           url,
         ];
-        if (priority === Priority.HIGH) {
-          this.#processQueue(true);
-        }
+        this.#processQueue(priority);
       }
       return this.blobs[url];
     }
@@ -110,7 +108,7 @@ export class Loader {
     const promise  = new Promise<BlobRecord>((resolve) => {
       this.blobs[url].resolve = resolve;
       this.loadingStack.push(url);
-      this.#processQueue(priority === Priority.HIGH);
+      this.#processQueue(priority);
     });
     this.blobs[url].promise = promise.then(b => b.url);
     return this.blobs[url];
@@ -124,8 +122,10 @@ export class Loader {
     resolve?.(b);
   }
 
-  #processQueue(highPriority: boolean) {
-    if (this.loadingCount < this.#config.maxParallelLoad || highPriority) {
+  #processQueue(priority: Priority) {
+    if (this.loadingCount < this.#config.maxParallelLoad 
+      || priority === Priority.HIGH && this.loadingCount < this.#config.maxParallelLoad + 1
+      || priority === Priority.TOP) {
       const url = this.loadingStack.pop();
       const b = url ? this.blobs[url] : undefined;
       if (url && b && !b.fetching && !b.url) {

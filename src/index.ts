@@ -1,3 +1,4 @@
 import { Loader } from "./loader/Loader";
+import { Priority } from "./loader/Priority";
 
-export { Loader };
+export { Loader, Priority };
