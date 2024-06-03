@@ -28358,11 +28358,11 @@ var require_jsx_dev_runtime = __commonJS((exports, module) => {
 });
 
 // src/index.tsx
-var import_react5 = __toESM(require_react(), 1);
+var import_react6 = __toESM(require_react(), 1);
 var client = __toESM(require_client(), 1);
 
 // src/App.tsx
-var import_react4 = __toESM(require_react(), 1);
+var import_react5 = __toESM(require_react(), 1);
 
 // src/ImageList.tsx
 var import_react = __toESM(require_react(), 1);
@@ -28591,16 +28591,39 @@ function useLoader({ urls }) {
 }
 
 // src/Links.tsx
+var import_react4 = __toESM(require_react(), 1);
+
+// src/utils/ext-utils.ts
+function isImage(path) {
+  const ext = path.split(".").pop()?.toLowerCase();
+  return ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "gif" || ext === "svg";
+}
+
+// src/Links.tsx
 var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
 function Links({ tree, path, setPath }) {
+  const imagesPerLink = import_react4.useMemo(() => {
+    const imagesPerLink2 = {};
+    tree?.forEach((node) => {
+      if (node.type === "blob" && isImage(node.path)) {
+        const nodePathSplit = node.path.split("/");
+        for (let i = 1;i < nodePathSplit.length; i++) {
+          const tag = nodePathSplit.slice(0, i).join("/");
+          imagesPerLink2[tag] = (imagesPerLink2[tag] ?? 0) + 1;
+        }
+      }
+    });
+    return imagesPerLink2;
+  }, [tree]);
+  console.log(imagesPerLink);
   return jsx_dev_runtime3.jsxDEV(jsx_dev_runtime3.Fragment, {
     children: jsx_dev_runtime3.jsxDEV("div", {
-      children: tree?.map((img, index) => {
-        const imgPathSplit = img.path.split("/");
-        imgPathSplit.pop();
-        const imgPathDir = imgPathSplit.join("/");
-        if (img.type === "tree" && path === imgPathDir) {
-          const path2 = img.path;
+      children: tree?.map((node, index) => {
+        const nodePathSplit = node.path.split("/");
+        nodePathSplit.pop();
+        const nodePathDir = nodePathSplit.join("/");
+        if (node.type === "tree" && path === nodePathDir && imagesPerLink[node.path]) {
+          const path2 = node.path;
           return jsx_dev_runtime3.jsxDEV("div", {
             style: {
               cursor: "pointer",
@@ -28609,8 +28632,13 @@ function Links({ tree, path, setPath }) {
             onClick: () => {
               setPath(path2);
             },
-            children: path2
-          }, index, false, undefined, this);
+            children: [
+              path2,
+              " (",
+              imagesPerLink[path2],
+              ")"
+            ]
+          }, index, true, undefined, this);
         }
       })
     }, undefined, false, undefined, this)
@@ -28623,27 +28651,24 @@ var App_module_default = "./App.module-1ba60838f44f4b47.css";
 // src/App.tsx
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
 function App() {
-  const [repo, setRepo] = import_react4.useState({
+  const [repo, setRepo] = import_react5.useState({
     name: "art",
     author: "jacklehamster"
   });
-  const [path, setPath] = import_react4.useState("");
-  const authorId = import_react4.useId();
-  const repoId = import_react4.useId();
+  const [path, setPath] = import_react5.useState("");
+  const authorId = import_react5.useId();
+  const repoId = import_react5.useId();
   const { tree } = useGitTree(repo);
-  const images = import_react4.useMemo(() => {
-    return tree?.filter((t) => t.type === "blob").filter((t) => {
-      const ext = t.path.split(".").pop()?.toLowerCase();
-      return ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "gif" || ext === "svg";
-    }).map((t) => {
+  const images = import_react5.useMemo(() => {
+    return tree?.filter((t) => t.type === "blob").filter((t) => isImage(t.path)).map((t) => {
       const { author, repo: repo2 } = URL_REGEX.exec(t.url)?.groups ?? {};
       return [t.path, author, repo2];
     }).filter(([path2, author, repo2]) => path2 && author && repo2).map(([path2, author, repo2]) => `https://${author}.github.io/${repo2}/${path2}`);
   }, [tree, repo]);
   const { u, loading } = useLoader({ urls: images });
-  const authorRef = import_react4.useRef(null);
-  const repoRef = import_react4.useRef(null);
-  import_react4.useEffect(() => {
+  const authorRef = import_react5.useRef(null);
+  const repoRef = import_react5.useRef(null);
+  import_react5.useEffect(() => {
     if (authorRef.current && repoRef.current) {
       authorRef.current.value = "jacklehamster";
       repoRef.current.value = "art";
@@ -28788,6 +28813,6 @@ function App() {
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
 var div = document.body.appendChild(document.createElement("div"));
 var root = client.createRoot(div);
-root.render(location.search.indexOf("strict-mode") >= 0 ? jsx_dev_runtime5.jsxDEV(import_react5.StrictMode, {
+root.render(location.search.indexOf("strict-mode") >= 0 ? jsx_dev_runtime5.jsxDEV(import_react6.StrictMode, {
   children: jsx_dev_runtime5.jsxDEV(App, {}, undefined, false, undefined, this)
 }, undefined, false, undefined, this) : jsx_dev_runtime5.jsxDEV(App, {}, undefined, false, undefined, this));

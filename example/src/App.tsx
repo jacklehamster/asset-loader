@@ -6,6 +6,7 @@ import { URL_REGEX } from './UrlRegex';
 import { Links } from './Links';
 import styles from './App.module.css';
 import React from 'react';
+import { isImage } from './utils/ext-utils';
 
 export const GIT_API_URL = 'https://api.github.com/repos';
 
@@ -23,10 +24,7 @@ export default function App() {
   const images = useMemo(() => {
     return tree
       ?.filter(t => t.type === "blob")
-      .filter(t => {
-        const ext = t.path.split(".").pop()?.toLowerCase();
-        return ext === "png" || ext === "jpg" || ext === "jpeg" || ext==="gif" || ext==="svg";
-      })
+      .filter(t => isImage(t.path))
       .map(t => {
         const { author, repo } = URL_REGEX.exec(t.url)?.groups ?? {};
         return [t.path, author, repo];
