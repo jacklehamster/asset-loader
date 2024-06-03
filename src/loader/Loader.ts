@@ -68,6 +68,21 @@ export class Loader {
     return !blobs.length ? 0 : blobs.reduce((a, b) => a + (b.url ? 1 : 0), 0)
   }
 
+  #startFetching(record: BlobRecord) {
+    if (!record.fetching) {
+      record.fetching = true;
+      this.loadingCount++;
+    }
+  }
+
+  #stopFetching(record: BlobRecord) {
+    if (record.fetching) {
+      delete record.fetching;
+      this.loadingCount--;
+      setTimeout(() => this.#processQueue(false), this.#config.waitBetweenLoader);
+    }
+  }
+
   #revoke(url: string) {
     const b = this.blobs[url];
     const u = b?.url;
@@ -105,7 +120,7 @@ export class Loader {
     const resolve = b.resolve;
     delete b.resolve;
     delete b.retried;
-    delete b.fetching;
+    this.#stopFetching(b);
     resolve?.(b);
   }
 
@@ -114,8 +129,7 @@ export class Loader {
       const url = this.loadingStack.pop();
       const b = url ? this.blobs[url] : undefined;
       if (url && b && !b.fetching && !b.url) {
-        b.fetching = true;
-        this.loadingCount++;
+        this.#startFetching(b);
         fetch(url)
           .then(r => r.blob())
           .then(blob => {
@@ -146,7 +160,6 @@ export class Loader {
             return blob;
           })
           .then(blob => {
-            this.loadingCount--;
             if (!blob) {
               //  failed load
               b.retried = (b.retried ?? 0) + 1;
@@ -160,10 +173,7 @@ export class Loader {
               b.url = URL.createObjectURL(blob);
               this.#resolveRecord(b);
             }
-            delete b.fetching;
-          })
-          .then(() => {
-            setTimeout(() => this.#processQueue(false), this.#config.waitBetweenLoader);
+            this.#stopFetching(b);
           });
       }
     }
