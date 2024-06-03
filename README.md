@@ -1,5 +1,7 @@
 # asset-loader
 
+Click [here](https://jacklehamster.github.io/asset-loader/example) to view example.
+
 To install dependencies:
 
 ```bash

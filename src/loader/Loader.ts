@@ -51,6 +51,11 @@ export class Loader {
 
   async #getRecord(url: string): Promise<BlobRecord> {
     if (this.blobs[url]) {
+      //  bump priority
+      this.loadingStack = [
+        ...this.loadingStack.filter(u => u !== url),
+        url,
+      ];
       return this.blobs[url];
     }
     return new Promise<BlobRecord>((resolve) => {
@@ -80,6 +85,8 @@ export class Loader {
                   return;
                 }
                 break;
+              case "svg":
+              case "gif":
               case "png":
               case "jpg":
               case "jpeg":

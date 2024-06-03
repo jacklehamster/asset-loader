@@ -12,6 +12,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "baojs": "^0.2.1",
+    "bun-lightningcss": "^0.2.0",
     "png-to-ico": "^2.1.8",
     "serve-static-bun": "^0.5.3"
   },
