@@ -28615,7 +28615,6 @@ function Links({ tree, path, setPath }) {
     });
     return imagesPerLink2;
   }, [tree]);
-  console.log(imagesPerLink);
   return jsx_dev_runtime3.jsxDEV(jsx_dev_runtime3.Fragment, {
     children: jsx_dev_runtime3.jsxDEV("div", {
       children: tree?.map((node, index) => {

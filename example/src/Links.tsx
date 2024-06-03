@@ -21,7 +21,6 @@ export function Links({ tree, path, setPath }:{
 
     return imagesPerLink;
   }, [tree]);
-  console.log(imagesPerLink);
 
   return <><div>
     {tree?.map((node, index) => {
