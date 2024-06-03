@@ -53,7 +53,7 @@ export class Loader {
   }
 
   remove(url: string): void {
-    this.loadingStack = this.loadingStack.filter(u => url===u);
+    this.loadingStack = this.loadingStack.filter(u => url!==u);
     this.#revoke(url);
     const b = this.blobs[url];
     this.#resolveRecord(b);
