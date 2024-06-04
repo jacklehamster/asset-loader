@@ -39,12 +39,12 @@ export class Loader {
     return this.blobs[url]?.url;
   }
   
-  getUrl(url: string, priority: Priority = Priority.DEFAULT): Promise<string | undefined> {
+  getUrl(url: string, priority: Priority = Priority.HIGH): Promise<string | undefined> {
     const record = this.#getRecord(url, priority);
     return record.promise ?? Promise.resolve(record.url);
   }
 
-  load(url: string, priority: Priority =  Priority.DEFAULT): Promise<string | undefined> {
+  load(url: string, priority: Priority =  Priority.HIGH): Promise<string | undefined> {
     return this.getUrl(url, priority);
   }
 
@@ -79,7 +79,7 @@ export class Loader {
     if (record.fetching) {
       delete record.fetching;
       this.loadingCount--;
-      setTimeout(() => this.#processQueue(Priority.DEFAULT), this.#config.waitBetweenLoader);
+      setTimeout(() => this.#processQueue(Priority.MEDIUM), this.#config.waitBetweenLoader);
     }
   }
 
@@ -94,7 +94,7 @@ export class Loader {
 
   #getRecord(url: string, priority: Priority): BlobRecord {
     if (this.blobs[url]) {
-      if (this.loadingStack.indexOf(url) >= 0) {
+      if (priority !== Priority.LOW && this.loadingStack.indexOf(url) >= 0) {
         //  bump priority
         this.loadingStack = [
           ...this.loadingStack.filter(u => u !== url),
