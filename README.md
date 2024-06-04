@@ -62,4 +62,4 @@ const loader = new Loader({
 
 Below is a demo on [@dobuki/asset-loader](https://www.npmjs.com/package/@dobuki/asset-loader) being used to load all assets within a Github repo.
 
-Click [here](https://jacklehamster.github.io/asset-loader/example) to view example.
+Click [here](https://jacklehamster.github.io/asset-loader/) to view example.
