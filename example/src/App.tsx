@@ -4,7 +4,6 @@ import { useGitTree } from './hooks/useGitTree';
 import { useLoader } from "./hooks/useLoader";
 import { URL_REGEX } from './UrlRegex';
 import { Links } from './Links';
-import styles from './App.module.css';
 import React from 'react';
 import { isImage } from './utils/ext-utils';
 
@@ -67,7 +66,7 @@ export default function App() {
     <input ref={repoRef} id={repoId} type="text" />
   </div>
   <div>
-    <button className={styles.black} type="button" onClick={useCallback(() => {
+    <button className={"black"} type="button" onClick={useCallback(() => {
       const author = authorRef.current?.value;
       const repo = repoRef.current?.value;
       if (author && repo) {
