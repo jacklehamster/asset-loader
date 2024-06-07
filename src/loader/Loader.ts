@@ -94,13 +94,22 @@ export class Loader {
 
   #getRecord(url: string, priority: Priority): BlobRecord {
     if (this.blobs[url]) {
-      if (priority !== Priority.LOW && this.loadingStack.indexOf(url) >= 0) {
-        //  bump priority
-        this.loadingStack = [
-          ...this.loadingStack.filter(u => u !== url),
-          url,
-        ];
-        this.#processQueue(priority);
+      if (this.loadingStack.indexOf(url) >= 0) {
+        if (priority === Priority.LOW) {
+          //  deprioritize
+          this.loadingStack = [
+            url,
+            ...this.loadingStack.filter(u => u !== url),
+          ];
+          this.#processQueue(priority);
+        } else {
+          //  bump priority
+          this.loadingStack = [
+            ...this.loadingStack.filter(u => u !== url),
+            url,
+          ];
+          this.#processQueue(priority);
+        }
       }
       return this.blobs[url];
     }
