@@ -3,7 +3,7 @@ import { URL_REGEX } from "./UrlRegex";
 import type { TreeItem } from "./hooks/useGitTree";
 import React from "react";
 import { ZoomImage } from "./ZoomImage";
-import { ImageThumbnail } from "./ImageThumbnail";
+import { Picture } from "./Picture";
 
 export function ImageList({ tree, path, u }:{
     path: string;
@@ -34,9 +34,16 @@ export function ImageList({ tree, path, u }:{
       {images?.[zoomIndex] ? <><div>{(zoomIndex+1)} / {images.length}</div> <ZoomImage onClose={() => setZoomIndex(-1)} 
         onNext={zoomIndex >= images.length - 1 ? undefined : () => setZoomIndex(index => index + 1)} 
         onPrevious={zoomIndex === 0 ? undefined : () => setZoomIndex(index => index - 1)} 
-        fullPath={u(images[zoomIndex])} /></> : 
+        fullPath={u(images[zoomIndex])}
+        title={images[zoomIndex]} /></> : 
       <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {images?.map((url, index) => <ImageThumbnail key={url} url={u(url)} onClick={() => setZoomIndex(index)} />)}
+          {images?.map((url, index) => 
+          <div key={url} style={{
+            width: 100, height: 100,
+          }}>
+            <Picture title={url} url={u(url)} onClick={() => setZoomIndex(index)} />
+          </div>
+          )}
       </div>}
     </>;
 }
