@@ -4,7 +4,7 @@
   "scripts": {
     "start": "bun run build && bun run index.ts --watch",
     "bundle": "bun i && rm -rf dist && mkdir dist && bun run build-icon && bun run bundler/bundler.ts",
-    "build": "bun run bundle && rm -rf .parcel-cache && npx parcel build index.html --dist-dir ../docs",
+    "build": "bun run bundle && rm -rf .parcel-cache && npx parcel build index.html --dist-dir ../docs --public-url ./",
     "build-icon": "png-to-ico ../icon.png > ../docs/favicon.ico"
   },
   "devDependencies": {
