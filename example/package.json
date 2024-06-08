@@ -3,8 +3,9 @@
   "type": "module",
   "scripts": {
     "start": "bun run build && bun run index.ts --watch",
-    "build": "bun i && rm -rf dist && mkdir dist && bun run build-icon && bun run bundler/bundler.ts && rm -rf .parcel-cache && npx parcel build index.html",
-    "build-icon": "png-to-ico ../icon.png > dist/favicon.ico"
+    "bundle": "bun i && rm -rf dist && mkdir dist && bun run build-icon && bun run bundler/bundler.ts",
+    "build": "bun run bundle && rm -rf .parcel-cache && npx parcel build index.html --dist-dir ../docs",
+    "build-icon": "png-to-ico ../icon.png > ../docs/favicon.ico"
   },
   "devDependencies": {
     "@types/bun": "latest",
