@@ -31,11 +31,16 @@ export function ImageList({ tree, path, u }:{
       }).filter(img => !!img);
     }, [tree, path, u]);
     return <>
-      {images?.[zoomIndex] ? <><div>{(zoomIndex+1)} / {images.length}</div> <ZoomImage onClose={() => setZoomIndex(-1)} 
-        onNext={zoomIndex >= images.length - 1 ? undefined : () => setZoomIndex(index => index + 1)} 
-        onPrevious={zoomIndex === 0 ? undefined : () => setZoomIndex(index => index - 1)} 
-        fullPath={u(images[zoomIndex])}
-        title={images[zoomIndex]} /></> : 
+      {images?.[zoomIndex] ? <>
+        <div>{(zoomIndex+1)} / {images.length}</div>
+          <ZoomImage onClose={() => setZoomIndex(-1)} 
+            onNext={zoomIndex >= images.length - 1 ? undefined : () => setZoomIndex(index => index + 1)} 
+            onPrevious={zoomIndex === 0 ? undefined : () => setZoomIndex(index => index - 1)}
+            previousPath={images[zoomIndex - 1]}
+            path={images[zoomIndex]}
+            nextPath={images[zoomIndex + 1]}
+            u={u} />
+        </> : 
       <div style={{ display: "flex", flexWrap: "wrap" }}>
           {images?.map((url, index) => 
           <div key={url} style={{

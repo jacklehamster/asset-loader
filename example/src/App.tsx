@@ -18,7 +18,7 @@ export default function App() {
   const authorId = useId();
   const repoId = useId();
 
-  const { tree } = useGitTree(repo);
+  const { tree, error } = useGitTree(repo);
 
   const images = useMemo(() => {
     return tree
@@ -107,6 +107,7 @@ export default function App() {
         <Links tree={tree} path={path} setPath={setPath} />
       </> : "..."
     }
+    <>{error}</>
     <>{loading ? <div>Loading images ({loading})...</div> : undefined}</>
   </>;
 }

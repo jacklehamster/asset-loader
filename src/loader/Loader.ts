@@ -11,6 +11,7 @@ interface BlobRecord {
   retried?: number;
   resolve?: (blob: BlobRecord) => void;
   promise?: Promise<string|undefined>;
+  abort?: AbortController;
   failed?: boolean;
   canceled?: boolean;
   fetching?: boolean;
@@ -21,6 +22,7 @@ export class Loader {
   readonly blobs: Record<string, BlobRecord> = {};
   loadingStack: string[] = [];
   loadingCount: number = 0;
+  paused = false;
 
   static mainLoader = new Loader();
 
@@ -33,6 +35,24 @@ export class Loader {
       //  config
       ...config,
     };
+  }
+
+  async *getAllUrls() {
+    const returnedPromises = new Set<string|undefined>();
+    let promises: Promise<[string, string|undefined]>[] = [];
+    do {
+      promises = Object.entries(this.blobs)
+        .filter(([u]) => !returnedPromises.has(u))
+        .map(([u, b]) => [u, b.promise])
+        .filter((entry): entry is [string, Promise<string | undefined>] => !!entry[1])
+        .map(async ([u, p]) => [u, await p] as [string, string|undefined]);
+      if (promises.length) {
+        const p = Promise.race(promises);
+        const [url, blobUrl] = await p;
+        returnedPromises.add(url);
+        yield blobUrl;
+      }
+    } while(promises.length);
   }
 
   getUrlSync(url: string): string | undefined {
@@ -48,6 +68,13 @@ export class Loader {
     return this.getUrl(url, priority);
   }
 
+  cancel(url: string): void {
+    const record = this.#getRecord(url, Priority.NONE);
+    record.canceled = true;
+    record.abort?.abort("Canceled by user");
+    this.#resolveRecord(record);
+  }
+
   failed(url: string): boolean {
     return !!this.blobs[url].failed;
   }
@@ -60,7 +87,19 @@ export class Loader {
   }
 
   clear() {
-    Object.keys(this.blobs).forEach(u => this.remove(u));
+    Object.keys(this.blobs).forEach(u => {
+      this.cancel(u);
+      this.remove(u);
+    });
+  }
+
+  pause(): void {
+    this.paused = true;
+  }
+
+  resume(): void {
+    this.paused = false;
+    this.#processQueue(Priority.NONE);
   }
 
   get progress(): number {
@@ -75,7 +114,7 @@ export class Loader {
     }
   }
 
-  #stopFetching(record: BlobRecord) {
+  #doneFetching(record: BlobRecord) {
     if (record.fetching) {
       delete record.fetching;
       this.loadingCount--;
@@ -95,7 +134,9 @@ export class Loader {
   #getRecord(url: string, priority: Priority): BlobRecord {
     if (this.blobs[url]) {
       if (this.loadingStack.indexOf(url) >= 0) {
-        if (priority === Priority.LOW) {
+        if (priority === Priority.NONE) {
+          //  ignore
+        } else if (priority === Priority.LOW) {
           //  deprioritize
           this.loadingStack = [
             url,
@@ -127,11 +168,15 @@ export class Loader {
     const resolve = b.resolve;
     delete b.resolve;
     delete b.retried;
-    this.#stopFetching(b);
+    delete b.abort;
+    this.#doneFetching(b);
     resolve?.(b);
   }
 
   #processQueue(priority: Priority) {
+    if (this.paused) {
+      return;
+    }
     if (this.loadingCount < this.#config.maxParallelLoad 
       || priority === Priority.HIGH && this.loadingCount < this.#config.maxParallelLoad + 1
       || priority === Priority.TOP) {
@@ -139,7 +184,8 @@ export class Loader {
       const b = url ? this.blobs[url] : undefined;
       if (url && b && !b.fetching && !b.url) {
         this.#startFetching(b);
-        fetch(url)
+        b.abort = new AbortController();
+        fetch(url, { signal: b.abort.signal })
           .then(r => r.blob())
           .then(blob => {
             const split = url.split(".");
@@ -182,7 +228,7 @@ export class Loader {
               b.url = URL.createObjectURL(blob);
               this.#resolveRecord(b);
             }
-            this.#stopFetching(b);
+            this.#doneFetching(b);
           });
       }
     }

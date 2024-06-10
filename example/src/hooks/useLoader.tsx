@@ -11,9 +11,16 @@ export function useLoader({ urls }: { urls?: string[] }) {
   useEffect(() => {
     urls?.forEach((u) => {
       setLoading(l => l + 1);
-      loader.load(u).then(() => setLoading(l => l - 1));
+      loader.load(u);
     });
-  }, [urls, loader]);
+
+    const listUrls = async() => {
+      for await (const u of loader.getAllUrls()) {
+        setLoading(l => l - 1);
+      }
+    };
+    listUrls();
+  }, [urls, loader, reset]);
 
   const u = useCallback((url: string) => loader.getUrl(url), [loader]);
   return { u, loading, reset };
