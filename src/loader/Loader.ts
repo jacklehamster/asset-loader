@@ -21,8 +21,8 @@ interface BlobRecord {
 export class Loader {
   #config: Config;
   readonly blobs: Record<string, BlobRecord> = {};
-  loadingStack: string[] = [];
-  loadingCount: number = 0;
+  #loadingStack: string[] = [];
+  #loadingCount: number = 0;
   paused = false;
 
   static mainLoader = new Loader();
@@ -81,7 +81,7 @@ export class Loader {
   }
 
   remove(url: string): void {
-    this.loadingStack = this.loadingStack.filter(u => url!==u);
+    this.#loadingStack = this.#loadingStack.filter(u => url!==u);
     this.#revoke(url);
     const b = this.blobs[url];
     this.#resolveRecord(b);
@@ -119,14 +119,14 @@ export class Loader {
   #startFetching(record: BlobRecord) {
     if (!record.fetching) {
       record.fetching = true;
-      this.loadingCount++;
+      this.#loadingCount++;
     }
   }
 
   #doneFetching(record: BlobRecord) {
     if (record.fetching) {
       delete record.fetching;
-      this.loadingCount--;
+      this.#loadingCount--;
       setTimeout(() => this.#processQueue(Priority.MEDIUM), this.#config.waitBetweenLoader);
     }
   }
@@ -142,20 +142,20 @@ export class Loader {
 
   #getRecord(url: string, priority: Priority): BlobRecord {
     if (this.blobs[url]) {
-      if (this.loadingStack.indexOf(url) >= 0) {
+      if (this.#loadingStack.indexOf(url) >= 0) {
         if (priority === Priority.NONE) {
           //  ignore
         } else if (priority === Priority.LOW) {
           //  deprioritize
-          this.loadingStack = [
+          this.#loadingStack = [
             url,
-            ...this.loadingStack.filter(u => u !== url),
+            ...this.#loadingStack.filter(u => u !== url),
           ];
           this.#processQueue(priority);
         } else {
           //  bump priority
-          this.loadingStack = [
-            ...this.loadingStack.filter(u => u !== url),
+          this.#loadingStack = [
+            ...this.#loadingStack.filter(u => u !== url),
             url,
           ];
           this.#processQueue(priority);
@@ -166,7 +166,7 @@ export class Loader {
     this.blobs[url] = {};
     const promise  = new Promise<BlobRecord>((resolve) => {
       this.blobs[url].resolve = resolve;
-      this.loadingStack.push(url);
+      this.#loadingStack.push(url);
       this.#processQueue(priority);
     });
     this.blobs[url].promise = promise.then(b => b.url);
@@ -190,10 +190,10 @@ export class Loader {
     if (this.paused) {
       return;
     }
-    if (this.loadingCount < this.#config.maxParallelLoad 
-      || priority === Priority.HIGH && this.loadingCount < this.#config.maxParallelLoad + 1
+    if (this.#loadingCount < this.#config.maxParallelLoad 
+      || priority === Priority.HIGH && this.#loadingCount < this.#config.maxParallelLoad + 1
       || priority === Priority.TOP) {
-      const url = this.loadingStack.pop();
+      const url = this.#loadingStack.pop();
       const b = url ? this.blobs[url] : undefined;
       if (url && b && !b.fetching && !b.url) {
         this.#startFetching(b);
@@ -232,7 +232,7 @@ export class Loader {
               //  failed load
               b.retried = (b.retried ?? 0) + 1;
               if (b.retried < this.#config.retries) {
-                this.loadingStack.push(url);
+                this.#loadingStack.push(url);
                 this.#doneFetching(b);
               } else {
                 b.failed = true;
