@@ -14,7 +14,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "devDependencies": {
-    "@dobuki/dev-dependencies": "^1.0.7"
+    "@dobuki/dev-dependencies": "^1.0.8"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

@@ -1,8 +1,8 @@
 # asset-loader
 
-[![npm version](https://badge.fury.io/js/@dobuki%2Fasset-loader.svg)](https://www.npmjs.com/package/@dobuki/asset-loader)
+[![npm version](https://badge.fury.io/js/@dobuki%2Fasset-loader.svg)](https://www.npmjs.com/package/@dobuki/asset-loader) [![Version](https://img.shields.io/github/v/release/jacklehamster/asset-loader)](https://github.com/jacklehamster/asset-loader) [![License](https://img.shields.io/github/license/jacklehamster/asset-loader)](https://github.com/jacklehamster/asset-loader)
 
-![icon](https://jacklehamster.github.io/asset-loader/icon.png)
+![icon](icon.png)
 
 ## Description
 
