@@ -84,6 +84,7 @@ export class Loader {
     this.#loadingStack = this.#loadingStack.filter(u => url!==u);
     this.#revoke(url);
     const b = this.blobs[url];
+    delete this.blobs[url];
     this.#resolveRecord(b);
   }
 

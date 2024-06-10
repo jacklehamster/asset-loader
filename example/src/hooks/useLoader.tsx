@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader } from "@dobuki/asset-loader"
+import { useLastLoaded } from "./loader/useLastLoaded";
 
 export function useLoader({ urls }: { urls?: string[] }) {
   const loader = useMemo(() => new Loader(), []);
   const [loading, setLoading] = useState(0);
-  const [lastLoaded, setLastLoaded] = useState<string>()
+
   const reset = useCallback(() => {
     loader.clear();
   }, [loader]);
@@ -15,15 +16,8 @@ export function useLoader({ urls }: { urls?: string[] }) {
       setLoading(l => l + 1);
       loader.load(u).then(() => setLoading(l => l - 1));
     });
-
-    const listUrls = async() => {
-      for await (const u of loader.getAllUrls()) {
-        setLastLoaded(u?.[0]);
-      }
-      setLastLoaded(undefined);
-    };
-    listUrls();
-  }, [urls, loader]);
+  }, [loader,urls]);
+  // }, [loader,...(urls ?? [])]);
 
   const pause = useCallback(() => {
     loader.pause();
@@ -34,5 +28,5 @@ export function useLoader({ urls }: { urls?: string[] }) {
   }, [loader]);
 
   const u = useCallback((url: string) => loader.getUrl(url), [loader]);
-  return { u, loading, reset, lastLoaded, pause, resume };
+  return { u, loading, reset, lastLoaded: useLastLoaded({ loader, urls }), pause, resume };
 }

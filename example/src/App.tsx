@@ -6,6 +6,7 @@ import { URL_REGEX } from './UrlRegex';
 import { Links } from './Links';
 import React from 'react';
 import { isImage } from './utils/ext-utils';
+import { PauseCheckbox } from './PauseCheckbox';
 
 export const GIT_API_URL = 'https://api.github.com/repos';
 
@@ -109,15 +110,6 @@ export default function App() {
     }
     <>{error}</>
     <>{loading && lastLoaded ? <div>Loading images ({loading}): {lastLoaded}</div> : undefined}</>
-    <>{loading ? <>
-      <label htmlFor="chk">Pause loader:</label>
-      <input id="chk" type="checkbox" onChange={(e) => {
-        if (e.target.checked) {
-          pause();
-        } else {
-          resume();
-        };
-      }}></input>
-      </> : undefined}</>
+    <>{loading ? <PauseCheckbox pause={pause} resume={resume} /> : undefined}</>
   </>;
 }
