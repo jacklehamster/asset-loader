@@ -14,14 +14,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "devDependencies": {
-    "@dobuki/auto-publish": "^1.0.7",
-    "@types/bun": "latest",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.13.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5"
+    "@dobuki/dev-dependencies": "^1.0.7"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
