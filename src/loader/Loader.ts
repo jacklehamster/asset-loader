@@ -15,6 +15,7 @@ interface BlobRecord {
   failed?: boolean;
   canceled?: boolean;
   fetching?: boolean;
+  resolvePause?: (blob: BlobRecord) => void;
 }
 
 export class Loader {
@@ -50,7 +51,7 @@ export class Loader {
         const p = Promise.race(promises);
         const [url, blobUrl] = await p;
         returnedPromises.add(url);
-        yield blobUrl;
+        yield [url, blobUrl];
       }
     } while(promises.length);
   }
@@ -99,6 +100,14 @@ export class Loader {
 
   resume(): void {
     this.paused = false;
+    const blobs = Object.values(this.blobs);
+    blobs.forEach(b => {
+      if (b.resolvePause) {
+        const resolve = b.resolvePause;
+        delete b.resolvePause;
+        resolve?.(b);
+      }
+    });
     this.#processQueue(Priority.NONE);
   }
 
@@ -170,7 +179,11 @@ export class Loader {
     delete b.retried;
     delete b.abort;
     this.#doneFetching(b);
-    resolve?.(b);
+    if (this.paused) {
+      b.resolvePause = resolve;
+    } else {
+      resolve?.(b);
+    }
   }
 
   #processQueue(priority: Priority) {
@@ -220,6 +233,7 @@ export class Loader {
               b.retried = (b.retried ?? 0) + 1;
               if (b.retried < this.#config.retries) {
                 this.loadingStack.push(url);
+                this.#doneFetching(b);
               } else {
                 b.failed = true;
                 this.#resolveRecord(b);
@@ -228,7 +242,6 @@ export class Loader {
               b.url = URL.createObjectURL(blob);
               this.#resolveRecord(b);
             }
-            this.#doneFetching(b);
           });
       }
     }

@@ -32,7 +32,7 @@ export default function App() {
       .map(([path, author, repo]) => `https://${author}.github.io/${repo}/${path}`);
   }, [tree, repo]);
 
-  const { u, loading, reset: resetLoader } = useLoader({ urls: images });
+  const { u, loading, reset: resetLoader, lastLoaded, pause, resume } = useLoader({ urls: images });
 
   const authorRef = useRef<HTMLInputElement>(null);
   const repoRef = useRef<HTMLInputElement>(null);
@@ -108,6 +108,16 @@ export default function App() {
       </> : "..."
     }
     <>{error}</>
-    <>{loading ? <div>Loading images ({loading})...</div> : undefined}</>
+    <>{loading && lastLoaded ? <div>Loading images ({loading}): {lastLoaded}</div> : undefined}</>
+    <>{loading ? <>
+      <label htmlFor="chk">Pause loader:</label>
+      <input id="chk" type="checkbox" onChange={(e) => {
+        if (e.target.checked) {
+          pause();
+        } else {
+          resume();
+        };
+      }}></input>
+      </> : undefined}</>
   </>;
 }
