@@ -138,7 +138,7 @@ export class Loader {
     if (u) {
       URL.revokeObjectURL(u);
     }
-    delete b.url;
+    delete b?.url;
   }
 
   #getRecord(url: string, priority: Priority): BlobRecord {
