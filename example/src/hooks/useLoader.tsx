@@ -3,7 +3,9 @@ import { Loader } from "@dobuki/asset-loader"
 import { useLastLoaded } from "./loader/useLastLoaded";
 
 export function useLoader({ urls }: { urls?: string[] }) {
-  const loader = useMemo(() => new Loader(), []);
+  const loader = useMemo(() => new Loader({
+    maxParallelLoad: 3,
+  }), []);
   const [loading, setLoading] = useState(0);
 
   const reset = useCallback(() => {
@@ -17,7 +19,6 @@ export function useLoader({ urls }: { urls?: string[] }) {
       loader.load(u).then(() => setLoading(l => l - 1));
     });
   }, [loader,urls]);
-  // }, [loader,...(urls ?? [])]);
 
   const pause = useCallback(() => {
     loader.pause();

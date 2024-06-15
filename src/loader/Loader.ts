@@ -156,15 +156,14 @@ export class Loader {
             url,
             ...this.#loadingStack.filter(u => u !== url),
           ];
-          this.#processQueue(priority);
         } else {
           //  bump priority
           this.#loadingStack = [
             ...this.#loadingStack.filter(u => u !== url),
             url,
           ];
-          this.#processQueue(priority);
         }
+        this.#processQueue(priority);
       }
       return this.blobs[url];
     }
