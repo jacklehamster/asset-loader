@@ -8,6 +8,8 @@ async function bundle() {
   });
 }
 
-bundle().then(result => {
+await bundle().then(result => {
   result?.logs.forEach((line, index) => console.log(index, line));
 });
+
+export {}
